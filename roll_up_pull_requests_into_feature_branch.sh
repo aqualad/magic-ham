@@ -5,6 +5,9 @@
 #   request number on each line.  It applies them
 #   in order on the destination branch
 
+# It also expects you to have a remote 'upstream' that
+#  points to the repo you want to use for PRs
+
 # Get the branch we'll put all of the rebased code onto
 echo "Enter the destination branch"
 read destination_branch
