@@ -12,6 +12,9 @@
 echo "Enter the destination branch"
 read destination_branch
 
+# Add the accept-theirs alias we use to resolve merge conflicts during rebase
+git config --global alias.accept-theirs '!f() { git checkout --theirs -- \"${@:-.}\"; git add -u \"${@:-.}\"; }; f'
+
 while IFS='' read -r line || [[ -n "$line" ]]; do
 
 	PR=$line
