@@ -30,6 +30,18 @@ fi
 echo "Enter the destination branch (new branch for the results)"
 read destination_branch
 
+echo "\n==========================================\n"
+echo "Would you like to automatically resolve rebases and merge conflicts with the code in the rebased commit?"
+printf "(y/n)"
+read auto_resolve_conflict_states
+
+if [ $auto_resolve_conflict_states = "y" ]; then
+	auto_resolve_conflict_states=true
+:
+else
+	auto_resolve_conflict_states=false
+fi
+
 # Add the accept-theirs alias we use to resolve merge conflicts during rebase
 git config --global alias.accept-theirs '!f() { git checkout --theirs -- \"${@:-.}\"; git add -u \"${@:-.}\"; }; f'
 
@@ -72,9 +84,15 @@ while IFS='' read -r line || [[ -n "$line" ]]; do
 	if ! git rev-parse --abbrev-ref HEAD | grep -q "$feature_branch"; then
 		echo "It looks like we're rebasing"
 
-		while ! git rebase --continue; do
-			git accept-theirs
-		done
+		if auto_resolve_conflict_states; then
+			while ! git rebase --continue; do
+				git accept-theirs
+			done
+		:
+		else
+			exit 1
+		fi
+
 	fi
 
 	# Delete the develop PR branch
@@ -90,9 +108,15 @@ while IFS='' read -r line || [[ -n "$line" ]]; do
 			git branch -D $feature_branch
 		:
 		else
-			git accept-theirs
-			git commit --file .git/MERGE_MSG
-			git branch -D $feature_branch
+			echo "Merge conflict"
+			if auto_resolve_conflict_states; then
+				git accept-theirs
+				git commit --file .git/MERGE_MSG
+				git branch -D $feature_branch
+			:
+			else
+				exit 1
+			fi
 		fi
 
 		printf "\n========================\n"
