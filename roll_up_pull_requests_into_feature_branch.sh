@@ -8,6 +8,24 @@
 # It also expects you to have a remote 'upstream' that
 #  points to the repo you want to use for PRs
 
+# Get the prod branch
+echo "Enter the branch that you want to be based on"
+printf "(approved) "
+read master_branch
+
+if [[ -z $master_branch ]]; then
+	master_branch="approved"
+fi
+
+# Get the base branch from the PR (where the PR was merged into)
+echo "Enter the base branch of the PRs (where the PRs are merged into)"
+printf "(develop) "
+read base_branch
+
+if [[ -z $base_branch ]]; then
+	base_branch="develop"
+fi
+
 # Get the branch we'll put all of the rebased code onto
 echo "Enter the destination branch"
 read destination_branch
@@ -28,8 +46,8 @@ while IFS='' read -r line || [[ -n "$line" ]]; do
 	# Set a reference to the feature branch/PR
 	feature_branch=feature_branch_$PR
 
-	# Get the commit of the merge commit
-	merge_commit=$(git log --pretty=oneline --all --grep="Merge pull request #$PR" | grep -o "^[[:alnum:]]\{40\}")
+	# Get the hash of the merge commit in the base_branch
+	merge_commit=$(git log $base_branch --pretty=oneline --all --grep="Merge pull request #$PR" | grep -o "^[[:alnum:]]\{40\}")
 
 	# Get a version of develop before the merge
 	if [[ -z "${merge_commit// }" ]]; then
@@ -47,8 +65,8 @@ while IFS='' read -r line || [[ -n "$line" ]]; do
 		exit 1
 	fi
 
-	# Rebase feature branch onto master through pr branch
-	git rebase --onto master develop-$PR~1 $feature_branch
+	# Rebase feature branch onto master_branch through pr branch
+	git rebase --onto $master_branch develop-$PR~1 $feature_branch
 
 	# Check if we're rebasing
 	if ! git rev-parse --abbrev-ref HEAD | grep -q "$feature_branch"; then
