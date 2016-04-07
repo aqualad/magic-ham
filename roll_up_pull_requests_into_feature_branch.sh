@@ -3,7 +3,7 @@
 # This script takes a filename as a command line arg
 #   and parses the input file, expecting a pull
 #   request number on each line.  It applies them
-#   in order on the destination branch
+#   in order on the destination branch (old -> new)
 
 # It also expects you to have a remote 'upstream' that
 #  points to the repo you want to use for PRs
@@ -27,7 +27,7 @@ if [[ -z $base_branch ]]; then
 fi
 
 # Get the branch we'll put all of the rebased code onto
-echo "Enter the destination branch"
+echo "Enter the destination branch (new branch for the results)"
 read destination_branch
 
 # Add the accept-theirs alias we use to resolve merge conflicts during rebase
@@ -49,7 +49,7 @@ while IFS='' read -r line || [[ -n "$line" ]]; do
 	# Get the hash of the merge commit in the base_branch
 	merge_commit=$(git log $base_branch --pretty=oneline --all --grep="Merge pull request #$PR" | grep -o "^[[:alnum:]]\{40\}")
 
-	# Get a version of develop before the merge
+	# Make sure we found the merge commit
 	if [[ -z "${merge_commit// }" ]]; then
 		echo "Failed to find a merge commit matching $PR"
 		exit 1
